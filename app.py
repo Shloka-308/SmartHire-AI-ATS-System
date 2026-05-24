@@ -8,6 +8,9 @@ from modules.recommendation_engine import generate_recommendation
 import pandas as pd
 import json
 
+os.makedirs("resumes", exist_ok=True)
+os.makedirs("jd", exist_ok=True)
+
 #page visualization
 st.set_page_config(
     page_title="SMART HIRE",
