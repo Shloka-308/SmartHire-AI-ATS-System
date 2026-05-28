@@ -10,6 +10,7 @@ import json
 
 os.makedirs("resumes", exist_ok=True)
 os.makedirs("jd", exist_ok=True)
+os.makedirs("applications",exist_ok=True)
 
 #page visualization
 st.set_page_config(
@@ -171,9 +172,7 @@ with hr_tab:
 
     if st.button("Publish Job Opening"):
         if job_role and hr_jd_file:
-            jd_path = os.path.join("jd",hr_jd_file.name)
-            with open(jd_path,"wb") as f:
-                f.write(hr_jd_file.getbuffer())
+            jd_path = jobs[selected_role]
             with open("jobs.json","r") as f:
                 jobs = json.load(f)
             jobs[job_role] = jd_path   
@@ -183,30 +182,39 @@ with hr_tab:
     with open("jobs.json", "r") as f:
         jobs = json.load(f)
     selected_hr_role = st.selectbox("Select Published Role",list(jobs.keys()),key="hr_role_select")
-    hr_resume_files = st.file_uploader("Upload Resumes",type=["pdf","docx"],key = "hr_resume",accept_multiple_files=True)
+    application_folder = os.path.join("applications",selected_hr_role)
+    resume_files = os.listdir(application_folder)
+    if not os.path.exists(application_folder):
+        st.warning("No applications received yet.")
+        st.stop()
 
     top_n = st.number_input("Number of candidates to shortlist",min_value=1,value=3,step=1)
     if st.button("Rank Candidate"):
-        if selected_hr_role and hr_resume_files:
+        if selected_hr_role:
             jd_path = jobs[selected_hr_role]
             jd_txt = parse_job_description(jd_path)  
             jd_skills = extract_skill(jd_txt)  
+            application_folder = os.path.join("applications",selected_hr_role)
+            resume_files = os.listdir(application_folder)
             all_results = []
             seen_resumes = set()
-            for resume_file in hr_resume_files:
-                if resume_file.name in seen_resumes:
+            for file_name in resume_files:
+                if file_name in seen_resumes:
                     st.warning(f"Duplicate resume detected : "f"{resume_file.name}")
                     continue   
-                seen_resumes.add(resume_file.name)           
+                seen_resumes.add(file_name)           
 
-                resume_path = os.path.join("resumes",resume_file.name)
+                role_folder = os.path.join("applications",selected_role)
+                os.makedirs(role_folder, exist_ok=True)
+
+                resume_path = os.path.join(application_folder, file_name)
                 with open(resume_path,"wb") as f:
                     f.write(resume_file.getbuffer())
                 resume_txt = parse_resume(resume_path)
                 resume_skills = extract_skill(resume_txt)
                 result = rank_resume(resume_txt,jd_txt,resume_skills,jd_skills)    
                 all_results.append({
-                    "candidate_name" : resume_file.name,
+                    "candidate_name" : file_name,
                     "score" : result["final_ranking_score"],
                     "common_skills" : result["common_skills"],
                     "missing_skills" : result["missing_skills"]
