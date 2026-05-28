@@ -111,6 +111,9 @@ Analyze resumes, match job roles, and improve ATS compatibility using AI & NLP.
     if st.button("Analyze Candidate"):
         if resume_file:
             jd_path = jobs[selected_role]
+            if not os.path.exists(application_folder):
+                st.warning("No applications received yet for this role.")
+                st.stop()
             resume_path = os.path.join("resumes", resume_file.name)
             with open(resume_path, "wb") as f:
                 f.write(resume_file.getbuffer())
@@ -183,11 +186,12 @@ with hr_tab:
         jobs = json.load(f)
     selected_hr_role = st.selectbox("Select Published Role",list(jobs.keys()),key="hr_role_select")
     application_folder = os.path.join("applications",selected_hr_role)
-    resume_files = os.listdir(application_folder)
+    
     if not os.path.exists(application_folder):
         st.warning("No applications received yet.")
         st.stop()
-
+    resume_files = os.listdir(application_folder)
+    
     top_n = st.number_input("Number of candidates to shortlist",min_value=1,value=3,step=1)
     if st.button("Rank Candidate"):
         if selected_hr_role:
