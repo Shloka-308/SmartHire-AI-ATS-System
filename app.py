@@ -185,12 +185,8 @@ with hr_tab:
     with open("jobs.json", "r") as f:
         jobs = json.load(f)
     selected_hr_role = st.selectbox("Select Published Role",list(jobs.keys()),key="hr_role_select")
-    application_folder = os.path.join("applications",selected_hr_role)
     
-    if not os.path.exists(application_folder):
-        st.warning("No applications received yet.")
-        st.stop()
-    resume_files = os.listdir(application_folder)
+    
     
     top_n = st.number_input("Number of candidates to shortlist",min_value=1,value=3,step=1)
     if st.button("Rank Candidate"):
@@ -199,6 +195,9 @@ with hr_tab:
             jd_txt = parse_job_description(jd_path)  
             jd_skills = extract_skill(jd_txt)  
             application_folder = os.path.join("applications",selected_hr_role)
+            if not os.path.exists(application_folder):
+               st.warning("No applications received yet.")
+               st.stop()
             resume_files = os.listdir(application_folder)
             all_results = []
             seen_resumes = set()
